@@ -1,0 +1,10 @@
+FROM nginx:1.27-alpine
+
+# Remove default config
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy our config and static files
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY . /usr/share/nginx/html
+
+EXPOSE 3000
