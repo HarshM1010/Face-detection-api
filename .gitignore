@@ -12,8 +12,6 @@ env/
 
 # Environment
 .env
-.env.*
-!.env.example
 
 # IDE
 .vscode/
@@ -37,11 +35,20 @@ test.db
 htmlcov/
 .pytest_cache/
 
-# Node.js
+# Node.js & MERN Stack
 node_modules/
 npm-debug.log
 yarn-error.log
 
+# Next.js
+frontend/.next/
+frontend/out/
+
 # NestJS
 backend/dist/
 backend/coverage/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
