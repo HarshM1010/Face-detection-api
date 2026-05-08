@@ -1,30 +1,28 @@
-FROM python:3.11-slim
+FROM node:20-slim
 
-# System dependencies for mediapipe and imageio
+# Install ffmpeg and build tools for canvas/fluent-ffmpeg
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    fonts-dejavu-core \
+    build-essential \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev \
+    python3 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Install Python deps
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY package*.json ./
+RUN npm ci
 
-# Copy application code
 COPY . .
 
-# Create directories for file storage
-RUN mkdir -p /app/uploads /app/processed
+# Ensure directories exist
+RUN mkdir -p uploads processed
+RUN npm run build
 
-# Non-root user for security
-RUN useradd --create-home appuser && \
-    chown -R appuser:appuser /app
-USER appuser
+EXPOSE 3001
 
-EXPOSE 8000
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["npm", "run", "start:prod"]

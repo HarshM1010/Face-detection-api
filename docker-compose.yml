@@ -1,49 +1,38 @@
 services:
-  # ─── PostgreSQL Database ─────────────────────────────────────────────────
   db:
-    image: postgres:16-alpine
-    container_name: facedetect-db
-    environment:
-      POSTGRES_USER: facedetect
-      POSTGRES_PASSWORD: facedetect
-      POSTGRES_DB: facedetect
+    image: mongo:6
+    container_name: facedetect-mongo
     ports:
-      - "5432:5432"
+      - "27017:27017"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U facedetect"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - mongodata:/data/db
     restart: unless-stopped
 
-  # ─── Backend API ─────────────────────────────────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: facedetect-backend
     environment:
-      DATABASE_URL: postgresql://facedetect:facedetect@db:5432/facedetect
-      CORS_ORIGINS: '["http://localhost:3000","http://frontend:3000"]'
-      DEBUG: "false"
+      - MONGODB_URI=mongodb://db:27017/facedetect
+      - PORT=3001
+      - CORS_ORIGIN=http://localhost:3000
     ports:
-      - "8000:8000"
+      - "3001:3001"
     volumes:
-      - uploads:/app/uploads
-      - processed:/app/processed
+      - ./backend/uploads:/app/uploads
+      - ./backend/processed:/app/processed
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     restart: unless-stopped
 
-  # ─── Frontend ────────────────────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: facedetect-frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
     ports:
       - "3000:3000"
     depends_on:
@@ -51,6 +40,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  pgdata:
-  uploads:
-  processed:
+  mongodata:
